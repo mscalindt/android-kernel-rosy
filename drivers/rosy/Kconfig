@@ -33,4 +33,13 @@ config LAST_KMSG_ROSY
 
 	  If unsure, say Y.
 
+config FW_CACHING
+	bool "Enable firmware caching during suspend"
+	depends on PM_SLEEP
+	help
+	  Say Y here to enable FW caching during suspend. Not
+	  recommended for ROSY.
+
+	  If unsure, say N.
+
 endmenu
