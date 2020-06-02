@@ -131,3 +131,11 @@ config SECURITY_SELINUX_POLICYDB_VERSION_MAX_VALUE
 	  installed under /etc/selinux/$SELINUXTYPE/policy, where
 	  SELINUXTYPE is defined in your /etc/selinux/config.
 
+config SECURITY_SELINUX_NO_AVC_LOGGING
+	bool "NSA SELinux silence AVC messages"
+	default n
+	depends on SECURITY_SELINUX
+	help
+	  This options disables AVC logging of SELinux.
+
+	  If you are unsure how to answer this question, answer N.
