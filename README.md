@@ -62,11 +62,6 @@ Contains commits that fix various things.
 Contains commits that fix various things by/for GCC.
 ```
 
-##### 3.18-misc:
-```
-Contains random upstream, backport, etc. commits.
-```
-
 ##### 3.18-no-debug:
 ```
 Contains commits that remove hard-coded debug code.
@@ -84,7 +79,7 @@ Contains drivers and code changes for rosy.
 
 ##### 3.18-upstream:
 ```
-Contains linux-3.18.y branch of linux-stable and f2fs-stable.
+Contains 3.18 upstream commits, backports from Linus' tree, and occasionally commits that didn't make it to Linus' tree.
 ```
 
 ##### LA.UM.8.6.r1-04400-89xx.0:
