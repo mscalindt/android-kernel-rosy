@@ -18,4 +18,12 @@ source "drivers/rosy/regulator/Kconfig"
 
 source "drivers/rosy/sound/Kconfig"
 
+config DTS_ROSY
+	bool "ROSY DTS"
+	select CONFIG_ARCH_SDM450
+	help
+	  Say Y here to build ROSY DTS.
+
+	  If unsure, say Y.
+
 endmenu
