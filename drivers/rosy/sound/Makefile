@@ -1,0 +1,1 @@
+obj-$(CONFIG_AW87319_ROSY)	+= AW87319_Audio_M.o

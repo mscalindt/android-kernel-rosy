@@ -16,4 +16,6 @@ source "drivers/rosy/power/Kconfig"
 
 source "drivers/rosy/regulator/Kconfig"
 
+source "drivers/rosy/sound/Kconfig"
+
 endmenu
