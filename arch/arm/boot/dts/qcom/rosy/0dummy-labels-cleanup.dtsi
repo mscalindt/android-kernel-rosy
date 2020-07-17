@@ -1,0 +1,7 @@
+/ {
+	/delete-node/ dummy_label;
+};
+
+&spmi_bus {
+	/delete-node/ qcom,pmi8950@3;
+};

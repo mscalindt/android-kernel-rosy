@@ -1,0 +1,164 @@
+#include "dsi-panel-ft8613-ebbg-5p7-720p-video.dtsi"
+#include "dsi-panel-ft8006m-boe-5p7-720p-video.dtsi"
+#include "dsi-panel-ft8613-csot-5p7-720p-video.dtsi"
+
+&spmi_bus {
+	qcom,pmi8940@3 {
+		labibb: qpnp-labibb-regulator {
+			ibb_regulator: qcom,ibb@dc00 {
+				/delete-property/
+					qcom,qpnp-ibb-use-default-voltage;
+				qcom,qpnp-ibb-init-lcd-voltage = <5700000>;
+			};
+
+			lab_regulator: qcom,lab@de00 {
+				/delete-property/
+					qcom,qpnp-ibb-use-default-voltage;
+				qcom,qpnp-ibb-init-lcd-voltage = <5700000>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0 {
+	/delete-property/ qcom,platform-te-gpio;
+	vdd-supply = <&pm8953_l17>;
+	iovdd_gpio-supply = <&iovdd_gpio_vreg>;
+	qcom,dsi-pref-prim-pan = <&dsi_ft8613_ebbg_5p7_720p_video>;
+	qcom,dsi-pref-sub-pan = <&dsi_ft8006m_boe_5p7_720p_video>;
+	qcom,dsi-pref-sub1-pan = <&dsi_ft8613_csot_5p7_720p_video>;
+	pinctrl-0 = <&mdss_dsi_active>;
+	pinctrl-1 = <&mdss_dsi_suspend>;
+};
+
+&dsi_panel_pwr_supply {
+	qcom,panel-supply-entry@1 {
+		reg = <1>;
+		qcom,supply-name = "iovdd_gpio";
+		qcom,supply-min-voltage = <1800000>;
+		qcom,supply-max-voltage = <1800000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+		qcom,supply-post-on-sleep = <10>;
+	};
+
+	qcom,panel-supply-entry@2 {
+		reg = <2>;
+		qcom,supply-name = "lab";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+	};
+
+	qcom,panel-supply-entry@3 {
+		reg = <3>;
+		qcom,supply-name = "ibb";
+		qcom,supply-min-voltage = <4600000>;
+		qcom,supply-max-voltage = <6000000>;
+		qcom,supply-enable-load = <100000>;
+		qcom,supply-disable-load = <100>;
+		qcom,supply-post-on-sleep = <10>;
+	};
+};
+
+&dsi_ft8613_ebbg_5p7_720p_video {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,qpnp-ibb-init-lcd-voltage = <5800000>;
+	qcom,qpnp-lab-init-lcd-voltage = <5800000>;
+};
+
+&dsi_ft8006m_boe_5p7_720p_video {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,qpnp-ibb-init-lcd-voltage = <6000000>;
+	qcom,qpnp-lab-init-lcd-voltage = <6000000>;
+};
+
+&dsi_ft8613_csot_5p7_720p_video {
+	qcom,panel-supply-entries = <&dsi_panel_pwr_supply>;
+	qcom,qpnp-ibb-init-lcd-voltage = <5800000>;
+	qcom,qpnp-lab-init-lcd-voltage = <5800000>;
+};
+
+&int_codec {
+	qcom,model = "msm8953-snd-card-mtp";
+	qcom,msm-hs-micbias-type = "internal";
+	status = "okay";
+};
+
+&pm8953_diangu_dig {
+	status = "okay";
+};
+
+&pm8953_diangu_analog {
+	status = "okay";
+};
+
+&ext_codec {
+	/delete-property/ qcom,cdc-us-euro-gpios;
+	qcom,model = "msm8953-tasha-snd-card";
+	qcom,audio-routing = "AIF4 VI", "MCLK",
+			     "AIF4 VI", "MICBIAS_REGULATOR",
+			     "RX_BIAS", "MCLK",
+			     "MADINPUT", "MCLK",
+			     "AIF4 MAD", "MICBIAS_REGULATOR",
+			     "AMIC2", "MIC BIAS2",
+			     "MIC BIAS2", "Headset Mic",
+			     "AMIC3", "MIC BIAS2",
+			     "MIC BIAS2", "ANCRight Headset Mic",
+			     "AMIC4", "MIC BIAS2",
+			     "MIC BIAS2", "ANCLeft Headset Mic",
+			     "AMIC5", "MIC BIAS3",
+			     "MIC BIAS3", "Handset Mic",
+			     "AMIC6", "MIC BIAS4",
+			     "MIC BIAS4", "Analog Mic6",
+			     "DMIC0", "MIC BIAS1",
+			     "MIC BIAS1", "Digital Mic0",
+			     "DMIC1", "MIC BIAS1",
+			     "MIC BIAS1", "Digital Mic1",
+			     "DMIC2", "MIC BIAS3",
+			     "MIC BIAS3", "Digital Mic2",
+			     "DMIC3", "MIC BIAS3",
+			     "MIC BIAS3", "Digital Mic3",
+			     "DMIC4", "MIC BIAS4",
+			     "MIC BIAS4", "Digital Mic4",
+			     "DMIC5", "MIC BIAS4",
+			     "MIC BIAS4", "Digital Mic5",
+			     "MIC BIAS1", "MICBIAS_REGULATOR",
+			     "MIC BIAS2", "MICBIAS_REGULATOR",
+			     "MIC BIAS3", "MICBIAS_REGULATOR",
+			     "MIC BIAS4", "MICBIAS_REGULATOR",
+			     "SpkrLeft IN", "SPK1 OUT",
+			     "SpkrRight IN", "SPK2 OUT";
+	qcom,msm-mbhc-hphl-swh = <0>;
+	qcom,wsa-max-devs = <2>;
+	qcom,wsa-devs = <&wsa881x_211>, <&wsa881x_212>,
+			<&wsa881x_213>, <&wsa881x_214>;
+	qcom,wsa-aux-dev-prefix = "SpkrLeft", "SpkrRight",
+				  "SpkrLeft", "SpkrRight";
+	status = "disabled";
+};
+
+&slim_msm {
+	status = "disabled";
+};
+
+&dai_slim {
+	status = "disabled";
+};
+
+&wcd9xxx_intc {
+	status = "disabled";
+};
+
+&clock_audio {
+	status = "disabled";
+};
+
+&wcd9335 {
+	status = "disabled";
+};
+
+&wcd_rst_gpio {
+	status = "disabled";
+};
