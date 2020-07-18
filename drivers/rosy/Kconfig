@@ -26,4 +26,15 @@ config DTS_ROSY
 
 	  If unsure, say Y.
 
+config LAST_KMSG_ROSY
+	bool "Last kernel messages interface"
+	select PSTORE
+	select PSTORE_CONSOLE
+	help
+	  Say Y here to enable proc interface used for storing the
+	  last kernel messages. The interface is located at
+	  /proc/last_kmsg
+
+	  If unsure, say Y.
+
 endmenu
