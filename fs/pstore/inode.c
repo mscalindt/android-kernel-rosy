@@ -532,10 +532,8 @@ static int __init init_pstore_fs(void)
 #ifdef CONFIG_LAST_KMSG_ROSY
 	last_kmsg_entry = proc_create_data("last_kmsg", S_IFREG | S_IRUGO,
 					   NULL, &last_kmsg_fops, NULL);
-	if (!last_kmsg_entry) {
+	if (!last_kmsg_entry)
 		pr_err("%s: Failed to create last_kmsg\n", __func__);
-		goto out;
-	}
 #endif
 
 out:
