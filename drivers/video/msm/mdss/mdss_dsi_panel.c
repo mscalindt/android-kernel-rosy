@@ -503,8 +503,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			gpio_free(ctrl_pdata->mode_gpio);
 	}
 
-	pr_info("%s: mdss_dsi_panel_reset time=%ums \n", __func__,
-		jiffies_to_msecs(jiffies-timeout));
+	pr_info("%s: time=%ums\n", __func__, jiffies_to_msecs(jiffies-timeout));
 exit:
 	return rc;
 }
@@ -1712,14 +1711,11 @@ static bool mdss_dsi_cmp_panel_reg_v2(struct mdss_dsi_ctrl_pdata *ctrl)
 		for (i = 0; i < len; ++i) {
 			if (ctrl->return_buf[i] !=
 					ctrl->status_value[group + i]) {
-				pr_info("%s: LCD ESD check fail, return_buf[%d]=0x%02x, status_value=[%d]=0x%02x \n",
-					__func__, i,
-					ctrl->return_buf[i], group + i,
-					ctrl->status_value[group + i]);
+				pr_info("%s: LCD ESD check failed\n", __func__);
 				break;
 			}
 			if (panel_dead2tp) {
-				pr_info("%s: LCD ESD check fail, panel_dead2tp is %d\n ",
+				pr_info("%s: LCD ESD check fail, dead2tp=%d\n",
 					__func__, panel_dead2tp);
 				break;
 			}
