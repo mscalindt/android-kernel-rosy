@@ -1590,7 +1590,7 @@ static uint16_t fusion_read_id_D1_back(uint8_t *data)
 			fusion_id[i]);
 	}
 
-	CDBG("fusionid_back: %s\n", fusionid_back_d1);
+	CDBG("%s: %s\n", __func__, fusionid_back_d1);
 	return 0;
 }
 
@@ -1605,7 +1605,7 @@ static uint16_t fusion_read_id_D1_front(uint8_t *data)
 			fusion_id[i]);
 	}
 
-	CDBG("fusionid_front: %s\n", fusionid_front_d1);
+	CDBG("%s: %s\n", __func__, fusionid_front_d1);
 	return 0;
 }
 
@@ -1750,49 +1750,36 @@ static int msm_eeprom_platform_probe(struct platform_device *pdev)
 			goto memdata_free;
 		}
 
-		if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")) {
-			printk("insensor eeprom todo init the otp register!\n");
+		if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i"))
 			eeprom_init_ov5675_reg_otp(e_ctrl, 0x20);
-		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")) {
-			printk("insensor eeprom todo init the otp register!\n");
+		else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii"))
 			eeprom_init_ov5675_reg_otp(e_ctrl, 0x6c);
-		} else {
-			printk("the eeprom is not insensor!\n");
-		}
 
 		if (!strcmp(eb_info->eeprom_name, "ovt_ov12a10_i")) {
 			module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x00);
-			pr_err("eeprom %s read module id %d",
-				eb_info->eeprom_name, module_id);
 			if (7 != module_id) {
-				pr_err("%s match id for ovt_ov12a10_i failed\n",
+				pr_err("%s: match ovt_ov12a10_i failed\n",
 					__func__);
 				goto power_down;
 			}
 		} else if (!strcmp(eb_info->eeprom_name, "sony_imx486_ii")) {
 			module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x00);
-			pr_err("eeprom %s read module id %d\n",
-				eb_info->eeprom_name, module_id);
 			if (1 != module_id) {
-				pr_err("%s match id for sony_imx486_ii failed\n",
+				pr_err("%s: match sony_imx486_ii failed\n",
 					__func__);
 				goto power_down;
 			}
 		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")) {
 			module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x7010);
-			pr_err("eeprom %s read module id %d\n",
-				eb_info->eeprom_name, module_id);
 			if (6 != module_id) {
-				pr_err("%s match id for ovt_ov5675_i failed\n",
+				pr_err("%s: match ovt_ov5675_i failed\n",
 					__func__);
 				goto power_down;
 			}
 		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")) {
 			module_id = sensor_eeprom_match_crc_id(e_ctrl, 0x7010);
-			pr_err("eeprom %s read module id %d\n",
-				eb_info->eeprom_name, module_id);
 			if (7 != module_id) {
-				pr_err("%s match id for ovt_ov5675_ii failed\n",
+				pr_err("%s: match ovt_ov5675_ii failed\n",
 					__func__);
 				goto power_down;
 			}
@@ -1808,86 +1795,65 @@ static int msm_eeprom_platform_probe(struct platform_device *pdev)
 				e_ctrl->cal_data.mapdata[j]);
 
 		if (!strcmp(eb_info->eeprom_name, "ovt_ov12a10_i")) {
-			CDBG("match id for ovt_ov12a10_i\n");
 			if (e_ctrl->cal_data.mapdata[0] == 0x01)
 				module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
 			else
 				module_id = -1;
-			printk("match id for ovt_ov12a10_i module_id=%d\n",
-				module_id);
 			if (module_id == 7) {
-				CDBG("match id for ovt_ov12a10_i success\n");
 				main_module_id = module_id;
 				fusion_read_id_D1_back(&e_ctrl->cal_data.mapdata[16]);
 				strcpy(fusionid_back, fusionid_back_d1);
 			} else {
-				pr_err("%s match id for ovt_ov12a10_i failed\n",
-					__func__);
+				pr_err("%s: ovt_ov12a10_i failed\n", __func__);
 				goto power_down;
 			}
 		} else if (!strcmp(eb_info->eeprom_name, "sony_imx486_ii")) {
-			CDBG("match id for sony_imx486_ii\n");
 			if (e_ctrl->cal_data.mapdata[0] == 0x01)
 				module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
 			else
 				module_id = -1;
-			printk("match id for sony_imx486_ii module_id=%d\n",
-				module_id);
 			if (module_id == 1) {
-				CDBG("match id for sony_imx486_ii success\n");
 				main_module_id = module_id;
 				fusion_read_id_D1_back(&e_ctrl->cal_data.mapdata[16]);
 				strcpy(fusionid_back, fusionid_back_d1);
 			} else {
-				pr_err("%s match id for sony_imx486_ii failed\n",
-					__func__);
+				pr_err("%s: sony_imx486_ii failed\n", __func__);
 				goto power_down;
 			}
 		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")) {
-			CDBG("match id for ovt_ov5675_i\n");
 			if (e_ctrl->cal_data.mapdata[0] == 0x01)
 				module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
 			else if (e_ctrl->cal_data.mapdata[80] == 0x01)
 				module_id = e_ctrl->cal_data.mapdata[81] & 0x1f;
 			else
 				module_id = -1;
-			printk("match id for ovt_ov5675_i module_id=%d\n",
-				module_id);
 			if (module_id == 6) {
-				CDBG("match id for ovt_ov5675_i success\n");
 				sub_module_id = module_id;
 				fusion_read_id_D1_front(&e_ctrl->cal_data.mapdata[16]);
 				strcpy(fusionid_front, fusionid_front_d1);
 			} else {
-				pr_err("%s match id for ovt_ov5675_i failed\n",
-					__func__);
+				pr_err("%s: ovt_ov5675_i failed\n", __func__);
 				goto power_down;
 			}
 		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")) {
-			CDBG("match id for ovt_ov5675_ii\n");
 			if (e_ctrl->cal_data.mapdata[0] == 0x01)
 				module_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
 			else if (e_ctrl->cal_data.mapdata[80] == 0x01)
 				module_id = e_ctrl->cal_data.mapdata[81] & 0x1f;
 			else
 				module_id = -1;
-			printk("match id for ovt_ov5675_ii module_id=%d\n",
-				module_id);
 			if (module_id == 7) {
-				CDBG("match id for ovt_ov5675_ii success\n");
 				sub_module_id = module_id;
 				fusion_read_id_D1_front(&e_ctrl->cal_data.mapdata[16]);
 				strcpy(fusionid_front, fusionid_front_d1);
 			} else {
-				pr_err("%s match id for ovt_ov5675_ii failed\n",
-					__func__);
+				pr_err("%s: ovt_ov5675_ii failed\n", __func__);
 				goto power_down;
 			}
 		} else {
-			pr_err("%s eeprom name match failed\n", __func__);
+			pr_err("%s: rosy eeprom failed\n", __func__);
 			goto power_down;
 		}
-		CDBG("%s eeprom module id: main_module_id=%d  sub_module_id=%d\n", __func__, main_module_id, sub_module_id);
 
 		e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
 

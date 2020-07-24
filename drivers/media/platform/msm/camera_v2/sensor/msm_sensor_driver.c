@@ -106,14 +106,12 @@ struct kobj_type ktype_front = {
 ssize_t kobj_fusion_id_show_back(struct kobject *kobject,
 				 struct attribute *attr, char *buf)
 {
-	CDBG("back_attrname:%s", attr->name);
 	return sprintf(buf, "%s", fusionid_back);
 }
 
 ssize_t kobj_fusion_id_show_front(struct kobject *kobject,
 				  struct attribute *attr, char *buf)
 {
-	CDBG("front_attrname:%s", attr->name);
 	return sprintf(buf, "%s", fusionid_front);
 }
 
@@ -899,34 +897,34 @@ int32_t msm_sensor_driver_probe(void *setting,
 
 	if (!strcmp(slave_info->sensor_name, "ovt_ov5675_i")) {
 		if (sub_module_id != 6) {
-			pr_err("failed: sub_module_id %d, sensor is not %s",
-				sub_module_id, slave_info->sensor_name);
+			pr_err("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
 			rc = -EINVAL;
 			goto free_slave_info;
 		}
 	} else if (!strcmp(slave_info->sensor_name, "ovt_ov5675_ii")) {
 		if (sub_module_id != 7) {
-			pr_err("failed: sub_module_id %d, sensor is not %s",
-				sub_module_id, slave_info->sensor_name);
+			pr_err("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
 			rc = -EINVAL;
 			goto free_slave_info;
 		}
 	} else if (!strcmp(slave_info->sensor_name, "sony_imx486_ii")) {
 		if (main_module_id != 1) {
-			pr_err("failed: main_module_id %d, sensor is not %s",
-				main_module_id, slave_info->sensor_name);
+			pr_err("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
 			rc = -EINVAL;
 			goto free_slave_info;
 		}
 	} else if (!strcmp(slave_info->sensor_name, "ovt_ov12a10_i")) {
 		if (main_module_id != 7) {
-			pr_err("failed: main_module_id %d, sensor is not %s",
-				main_module_id, slave_info->sensor_name);
+			pr_err("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
 			rc = -EINVAL;
 			goto free_slave_info;
 		}
 	} else {
-		pr_err("sensor name is %s, is nothing to do",
+		pr_err("%s: Sensor name is %s, nothing to do", __func__,
 			slave_info->sensor_name);
 		rc = -EINVAL;
 		goto free_slave_info;
