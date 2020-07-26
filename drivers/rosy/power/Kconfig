@@ -1,0 +1,30 @@
+menuconfig POWER_ROSY
+	bool "Power drivers"
+	select I2C
+	help
+	  Say Y here, and a list of supported power drivers will be
+	  displayed. This option may affect the kernel.
+
+	  If unsure, say Y.
+
+if POWER_ROSY
+
+config BQ2560_ROSY
+	tristate "BQ2560X"
+	depends on POWER_ROSY
+	help
+	  Say Y here to compile power drivers for BQ2560X Battery
+	  Charger.
+
+	  If unsure, say Y.
+
+config BQ27426_ROSY
+	tristate "BQ27426"
+	depends on POWER_ROSY
+	help
+	  Say Y here to compile power drivers for BQ27426 Battery
+	  Fuel Gauge.
+
+	  If unsure, say Y.
+
+endif
