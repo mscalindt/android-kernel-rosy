@@ -1,0 +1,22 @@
+menuconfig REGULATOR_ROSY
+	bool "Regulator drivers"
+	select I2C
+	select REGMAP_I2C
+	help
+	  Say Y here, and a list of supported power regulator drivers
+	  will be displayed. This option may affect the kernel.
+
+	  If unsure, say Y.
+
+if REGULATOR_ROSY
+
+config TPS65132_ROSY
+	tristate "TPS65132"
+	depends on REGULATOR_ROSY
+	help
+	  Say Y here to compile power regulator drivers for TI
+	  TPS65132.
+
+	  If unsure, say Y.
+
+endif

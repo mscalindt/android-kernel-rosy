@@ -14,4 +14,6 @@ source "drivers/rosy/soc/Kconfig"
 
 source "drivers/rosy/power/Kconfig"
 
+source "drivers/rosy/regulator/Kconfig"
+
 endmenu
