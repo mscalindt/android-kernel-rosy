@@ -1155,14 +1155,12 @@ static int get_prop_batt_temp(struct smbchg_chip *chip)
 		temp = DEFAULT_BATT_TEMP;
 	}
 
-	if (temp < -100) {
+	if (temp < -100)
 		temp = temp - 55;
-		return temp;
-	} else if (temp > 450) {
+	else if (temp > 450)
 		temp = temp - 10;
-		return temp;
-	} else
-		return temp;
+
+	return temp;
 }
 
 #define DEFAULT_BATT_CURRENT_NOW	0
