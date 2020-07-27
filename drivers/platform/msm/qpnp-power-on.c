@@ -2171,24 +2171,24 @@ static int pon_register_twm_notifier(struct qpnp_pon *pon)
 
 void probe_board_and_set(void)
 {
-	char *boadrid_start, *boardvol_start;
+	char *boardid, *boardvol;
 	char boardid_info[HARDWARE_MAX_ITEM_LONGTH];
 
-	boadrid_start = strstr(saved_command_line, "board_id=");
-	boardvol_start = strstr(saved_command_line, "board_vol=");
+	boardid = strstr(saved_command_line, "board_id=");
+	boardvol = strstr(saved_command_line, "board_vol=");
 	memset(boardid_info, 0, HARDWARE_MAX_ITEM_LONGTH);
-	if (boadrid_start != NULL) {
-		boardvol_start = strstr(boadrid_start, ":board_vol=");
-		if (boardvol_start != NULL)
+	if (boardid != NULL) {
+		boardvol = strstr(boardid, ":board_vol=");
+		if (boardvol != NULL)
 			strncpy(boardid_info,
-				boadrid_start + sizeof("board_id=") - 1,
-				boardvol_start - (boadrid_start + sizeof("board_id=") - 1));
+				boardid + sizeof("board_id=") - 1,
+				boardvol - (boardid + sizeof("board_id=") - 1));
 		else
 			strncpy(boardid_info,
-				boadrid_start + sizeof("board_id=") - 1,
+				boardid + sizeof("board_id=") - 1,
 				9);
 	} else {
-		sprintf(boardid_info, "boarid not define!");
+		sprintf(boardid_info, "Board ID not defined!");
 	}
 
 	strcpy(board_id, boardid_info);
