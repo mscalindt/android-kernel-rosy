@@ -6506,13 +6506,14 @@ wait:
 			pr_err("Could not read rslow comp thr: %d\n", rc);
 	}
 
-	rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
-					&chip->batt_max_voltage_uv);
-
-	if (rc)
-		pr_warn("couldn't find battery max voltage\n");
-	if (area_version_flag == 1)
+	if (area_version_flag == 1) {
 		chip->batt_max_voltage_uv = 4380000;
+	} else {
+		rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
+						&chip->batt_max_voltage_uv);
+		if (rc)
+			pr_warn("couldn't find battery max voltage\n");
+	}
 
 	/*
 	 * Only configure from profile if fg-cc-cv-threshold-mv is not
@@ -7206,10 +7207,13 @@ static int fg_of_init(struct fg_chip *chip)
 	OF_READ_PROPERTY(chip->evaluation_current,
 			"aging-eval-current-ma", rc,
 			DEFAULT_EVALUATION_CURRENT_MA);
-	OF_READ_PROPERTY(chip->cc_cv_threshold_mv,
-			"fg-cc-cv-threshold-mv", rc, 0);
+
 	if (area_version_flag == 1)
 		chip->cc_cv_threshold_mv = 4370;
+	else
+		OF_READ_PROPERTY(chip->cc_cv_threshold_mv,
+				"fg-cc-cv-threshold-mv", rc, 0);
+
 	if (of_property_read_bool(chip->spmi->dev.of_node,
 				"qcom,capacity-learning-on"))
 		chip->batt_aging_mode = FG_AGING_CC;

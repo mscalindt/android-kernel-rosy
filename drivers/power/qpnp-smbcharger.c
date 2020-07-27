@@ -3913,25 +3913,27 @@ static int smbchg_config_chg_battery_type(struct smbchg_chip *chip)
 	chip->battery_type = prop.strval;
 
 	/* change vfloat */
-	rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
-						&max_voltage_uv);
-	if (rc) {
-		pr_warn("couldn't find battery max voltage rc=%d\n", rc);
-		ret = rc;
+	if (area_version_flag == 1) {
+		max_voltage_uv = 4380000;
 	} else {
-		if (area_version_flag == 1)
-			max_voltage_uv = 4380000;
-		if (chip->vfloat_mv != (max_voltage_uv / 1000)) {
-			pr_info("Vfloat changed from %dmV to %dmV for battery-type %s\n",
-				chip->vfloat_mv, (max_voltage_uv / 1000),
-				chip->battery_type);
-			rc = smbchg_float_voltage_set(chip,
-						(max_voltage_uv / 1000));
-			if (rc < 0) {
-				dev_err(chip->dev,
-				"Couldn't set float voltage rc = %d\n", rc);
-				return rc;
-			}
+		rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
+							&max_voltage_uv);
+		if (rc) {
+			pr_warn("couldn't find battery max voltage rc=%d\n",
+				rc);
+			ret = rc;
+		}
+	}
+	if (chip->vfloat_mv != (max_voltage_uv / 1000)) {
+		pr_info("Vfloat changed from %dmV to %dmV for battery-type %s\n",
+			chip->vfloat_mv, (max_voltage_uv / 1000),
+			chip->battery_type);
+		rc = smbchg_float_voltage_set(chip,
+					(max_voltage_uv / 1000));
+		if (rc < 0) {
+			dev_err(chip->dev,
+			"Couldn't set float voltage rc = %d\n", rc);
+			return rc;
 		}
 	}
 
@@ -8042,9 +8044,12 @@ static int smb_parse_dt(struct smbchg_chip *chip)
 			"fastchg-current-ma", rc, 1);
 	if (chip->cfg_fastchg_current_ma == -EINVAL)
 		chip->cfg_fastchg_current_ma = DEFAULT_FCC_MA;
-	OF_PROP_READ(chip, chip->vfloat_mv, "float-voltage-mv", rc, 1);
+
 	if (area_version_flag == 1)
 		chip->vfloat_mv = 4380;
+	else
+		OF_PROP_READ(chip, chip->vfloat_mv, "float-voltage-mv", rc, 1);
+
 	OF_PROP_READ(chip, chip->customize_cool_low_limit,
 		     "customize-cool-low-limit", rc, 1);
 	OF_PROP_READ(chip, chip->customize_cool_high_limit,
