@@ -5002,11 +5002,6 @@ static int smbchg_restricted_charging(struct smbchg_chip *chip, bool enable)
 	return rc;
 }
 
-static int smbchg_factory_mode_controlled_by_capacity(struct smbchg_chip *chip)
-{
-	return 0;
-}
-
 static int smbchg_get_iusb(struct smbchg_chip *chip);
 static void smbchg_monitor_charging_temp_5_work(struct work_struct *work)
 {
@@ -5065,8 +5060,6 @@ static void smbchg_monitor_charging_temp_5_work(struct work_struct *work)
 	usb_current = smbchg_get_iusb(chip);
 	pr_smb(PR_DUMP, "@**batt_temp=%d,chg_current=%d,usb_current=%d\n",
 		batt_temp, chg_current, usb_current);
-
-	smbchg_factory_mode_controlled_by_capacity(chip);
 
 	schedule_delayed_work(&chip->monitor_charging_temp_5_work,
 			      msecs_to_jiffies(MONITOR_PERIOD));
