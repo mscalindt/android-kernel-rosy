@@ -737,12 +737,10 @@ static int lineout_status_put(struct snd_kcontrol *kcontrol,
 	pr_debug("%s:  external speaker PA mode:%d\n", __func__, state);
 
 	switch (state) {
-	case 1:
-		msm8952_ext_spk_control(1);
-		break;
 	case 0:
 		msm8952_ext_spk_control(0);
 		break;
+	case 1:
 	case 2:
 		msm8952_ext_spk_control(1);
 		break;
