@@ -180,11 +180,7 @@ unsigned char AW87319_Audio_Speaker(void)
 	I2C_write_reg(0x03, 0x05);
 	I2C_write_reg(0x04, 0x04);
 	I2C_write_reg(0x05, 0x0D);
-	#if defined CONFIG_D1_ROSY
 	I2C_write_reg(0x06, 0x05);
-	#else
-	I2C_write_reg(0x06, 0x03);
-	#endif
 	I2C_write_reg(0x07, 0x52);
 	I2C_write_reg(0x08, 0x28);
 	I2C_write_reg(0x09, 0x02);
