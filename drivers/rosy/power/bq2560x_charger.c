@@ -1098,9 +1098,7 @@ static int bq2560x_update_charging_profile(struct bq2560x *bq)
 	ret = bq2560x_set_input_volt_limit(bq, bq->platform_data->ta.vlim);
 	if (ret < 0)
 		pr_err("couldn't set input voltage limit, ret=%d\n", ret);
-#ifdef CONFIG_DISABLE_TEMP_PROTECT
-		chg_mv = 4100;
-#endif
+
 	ret = bq2560x_set_chargevolt(bq, chg_mv);
 	if (ret < 0)
 		pr_err("couldn't set charge voltage ret=%d\n", ret);

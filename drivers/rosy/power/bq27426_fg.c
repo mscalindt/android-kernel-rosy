@@ -1061,12 +1061,7 @@ static int fg_read_temperature(struct bq_fg_chip *bq)
 		return ret;
 	}
 
-#ifdef CONFIG_DISABLE_TEMP_PROTECT
-	pr_err("Disable temp control Version!\n");
-	return DEFAULT_TEMP;
-#else
 	return temp;
-#endif
 }
 #define DEFAULT_RESISTER 45
 static int fg_get_battid_resister(struct bq_fg_chip *bq)
