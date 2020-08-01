@@ -181,21 +181,13 @@
 /*
  * auto upgrade, please keep enable
  */
-#ifdef WT_COMPILE_FACTORY_VERSION
-	#define FTS_AUTO_UPGRADE_EN                     0
-#else
 #define FTS_AUTO_UPGRADE_EN                     1
-#endif
 
 /*
  * auto upgrade for lcd cfg
  * default: 0
  */
-#ifdef WT_COMPILE_FACTORY_VERSION
-	#define FTS_AUTO_UPGRADE_FOR_LCD_CFG_EN         0
-#else
 #define FTS_AUTO_UPGRADE_FOR_LCD_CFG_EN         1
-#endif
 
 /* auto cb check
  * default: disable

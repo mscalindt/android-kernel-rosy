@@ -1152,27 +1152,7 @@ static int bq2560x_system_temp_level_set(struct bq2560x *bq,
 
 	return ret;
 }
-static void bq2560x_factory_mode_control_capacity_work(struct bq2560x *bq)
-{
-#ifdef WT_COMPILE_FACTORY_VERSION
-	int ret;
 
-	pr_err("bq2560x_factory_mode_control_capacity_work\n");
-	if (bq2560x_battery_capacity >= 80 && bq2560x_battery_capacity <=100){
-		ret = bq2560x_charging_disable(bq, SOC, true);
-		if (ret) {
-			dev_err(bq->dev, "factory_mode_control_capacity disable fail: %d\n", ret);
-		}
-	}else if (bq2560x_battery_capacity >= 0 && bq2560x_battery_capacity < 80){
-		ret = bq2560x_charging_disable(bq, SOC, false);
-		if (ret) {
-			dev_err(bq->dev, "actory_mode_control_capacity enable fail: %d\n", ret);
-		}
-	}
-
-#endif
-
-}
 static int pc_suspend;
 static void bq2560x_external_power_changed(struct power_supply *psy)
 {
@@ -1839,7 +1819,6 @@ static void bq2560x_charge_jeita_workfunc(struct work_struct *work)
 							struct bq2560x, charge_jeita_work.work);
 
 	bq2560x_reset_watchdog_timer(bq);
-	bq2560x_factory_mode_control_capacity_work(bq);
 
 	bq2560x_check_batt_pres(bq);
 	bq2560x_check_batt_full(bq);

@@ -1296,7 +1296,7 @@ static void hardwareinfo_set(void*drv_data)
 	return ;
 
 }
-#ifndef WT_COMPILE_FACTORY_VERSION
+
 static int get_boot_mode(struct i2c_client *client)
 {
 	int ret;
@@ -1322,7 +1322,7 @@ static int get_boot_mode(struct i2c_client *client)
 
 	return 0;
 }
-#endif
+
 /*****************************************************************************
 *  Name: fts_ts_probe
 *  Brief:
