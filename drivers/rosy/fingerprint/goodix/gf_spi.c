@@ -876,36 +876,43 @@ static int __init gf_init(void)
 	 * that will key udev/mdev to add/remove /dev nodes.  Last, register
 	 * the driver which manages those device numbers.
 	 */
-
 	BUILD_BUG_ON(N_SPI_MINORS > 256);
 	status = register_chrdev(SPIDEV_MAJOR, CHRD_DRIVER_NAME, &gf_fops);
 	if (status < 0) {
-		pr_warn("Failed to register char device!\n");
+		pr_err("Failed to register char device\n");
 		return status;
 	}
 	SPIDEV_MAJOR = status;
+
 	gf_class = class_create(THIS_MODULE, CLASS_NAME);
 	if (IS_ERR(gf_class)) {
-		unregister_chrdev(SPIDEV_MAJOR, gf_driver.driver.name);
-		pr_warn("Failed to create class.\n");
-		return PTR_ERR(gf_class);
+		pr_err("Failed to create class\n");
+		status = PTR_ERR(gf_class);
+		goto err_class;
 	}
+
 #if defined(USE_PLATFORM_BUS)
 	status = platform_driver_register(&gf_driver);
 #elif defined(USE_SPI_BUS)
 	status = spi_register_driver(&gf_driver);
 #endif
 	if (status < 0) {
-		class_destroy(gf_class);
-		unregister_chrdev(SPIDEV_MAJOR, gf_driver.driver.name);
-		pr_warn("Failed to register SPI driver.\n");
+		pr_err("Failed to register driver\n");
+		goto err_register;
 	}
 
 #ifdef GF_NETLINK_ENABLE
 	netlink_init();
 #endif
+
 	pr_info("status = 0x%x\n", status);
 	return 0;
+
+err_register:
+	class_destroy(gf_class);
+err_class:
+	unregister_chrdev(SPIDEV_MAJOR, gf_driver.driver.name);
+	return status;
 }
 module_init(gf_init);
 
