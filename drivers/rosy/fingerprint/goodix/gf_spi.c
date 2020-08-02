@@ -101,7 +101,7 @@ static void notification_work(struct work_struct *work)
 static void gf_enable_irq(struct gf_dev *gf_dev)
 {
 	if (gf_dev->irq_enabled) {
-		pr_warn("IRQ has been enabled.\n");
+		pr_debug("IRQ has been enabled.\n");
 	} else {
 		enable_irq(gf_dev->irq);
 		gf_dev->irq_enabled = 1;
@@ -376,18 +376,18 @@ static void gf_kernel_key_input(struct gf_dev *gf_dev, struct gf_key *gf_key)
 
 	if (gf_key->key == GF_KEY_HOME) {
 		key_input = GF_KEY_INPUT_SELECT;
-		pr_info("fp keycode home-SELECT \n");
+		pr_debug("fp keycode home-SELECT \n");
 	} else if (gf_key->key == GF_KEY_POWER) {
 		key_input = GF_KEY_INPUT_SELECT;
-		pr_info("fp keycode power \n");
+		pr_debug("fp keycode power \n");
 	} else if (gf_key->key == GF_KEY_CAMERA) {
 		key_input = GF_KEY_INPUT_SELECT;
-		pr_info("fp keycode camera \n");
+		pr_debug("fp keycode camera \n");
 	} else {
 		/* add special key define */
 		key_input = gf_key->key;
 	}
-	pr_info("%s: received key event[%d], key=%d, value=%d\n",
+	pr_debug("%s: received key event[%d], key=%d, value=%d\n",
 			__func__, key_input, gf_key->key, gf_key->value);
 
 	if ((GF_KEY_POWER == gf_key->key || GF_KEY_CAMERA == gf_key->key)
@@ -555,7 +555,7 @@ static int gf_open(struct inode *inode, struct file *filp)
 
 	list_for_each_entry(gf_dev, &device_list, device_entry) {
 		if (gf_dev->devt == inode->i_rdev) {
-			pr_info("Found\n");
+			pr_debug("Found\n");
 			status = 0;
 			break;
 		}
@@ -565,7 +565,7 @@ static int gf_open(struct inode *inode, struct file *filp)
 		gf_dev->users++;
 		filp->private_data = gf_dev;
 		nonseekable_open(inode, filp);
-		pr_info("Succeed to open device. irq = %d\n",
+		pr_debug("Succeed to open device. irq = %d\n",
 				gf_dev->irq);
 		if (gf_dev->users == 1) {
 			status = gf_parse_dts(gf_dev);
@@ -666,7 +666,7 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 
 	if (val != FB_EVENT_BLANK)
 		return 0;
-	pr_info("[info] %s go to the goodix_fb_state_chg_callback value = %d\n",
+	pr_debug("[info] %s go to the goodix_fb_state_chg_callback value = %d\n",
 			__func__, (int)val);
 	gf_dev = container_of(nb, struct gf_dev, notifier);
 	if (evdata && evdata->data && val == FB_EVENT_BLANK && gf_dev) {
