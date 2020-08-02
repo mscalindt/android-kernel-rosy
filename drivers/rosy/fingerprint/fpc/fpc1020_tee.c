@@ -24,6 +24,7 @@
  * modify it under the terms of the GNU General Public License Version 2
  * as published by the Free Software Foundation.
  */
+#define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
 
 #include <linux/atomic.h>
 #include <linux/delay.h>
