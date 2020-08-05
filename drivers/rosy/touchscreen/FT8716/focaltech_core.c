@@ -1712,9 +1712,11 @@ int fts_ts_suspend(struct device *dev)
     msleep(20);
     }
 
+#if FTS_GESTURE_EN
 if (!(gesture_data.gesture_all_switch)){
 		lcd_power_ctrl(data, 0);
 	}
+#endif
 
     data->suspended = true;
 
@@ -1743,11 +1745,13 @@ static int fts_ts_resume(struct device *dev)
     }
     fts_release_all_finger();
 
+#if FTS_GESTURE_EN
 	if ((!(gesture_data.gesture_all_switch)) || panel_dead2tp){
 		FTS_ERROR("%s:panel_dead2tp=%d", __func__, panel_dead2tp);
 		panel_dead2tp = 0;
 		lcd_power_ctrl(data, 1);
 	}
+#endif
 
 #if (!FTS_CHIP_IDC)
     fts_reset_proc(200);
