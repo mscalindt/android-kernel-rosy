@@ -1837,6 +1837,11 @@ static int __init fts_ts_init(void)
 {
     int ret = 0;
 
+    if (!strcmp(Lcm_name, "ft8006m_boe_5p7_720p_video"))
+    {
+        return ret;
+    }
+
     FTS_FUNC_ENTER();
     ret = i2c_add_driver(&fts_ts_driver);
     if (ret != 0)

@@ -1829,6 +1829,13 @@ static struct i2c_driver fts_ts_driver =
 static int __init fts_ts_init(void)
 {
     int ret = 0;
+
+    if (!strcmp(Lcm_name, "ft8613_csot_5p7_720p_video")
+            || !strcmp(Lcm_name, "ft8613_ebbg_5p7_720p_video"))
+    {
+        return ret;
+    }
+
     FTS_FUNC_ENTER();
     ret = i2c_add_driver(&fts_ts_driver);
     if (ret != 0)
