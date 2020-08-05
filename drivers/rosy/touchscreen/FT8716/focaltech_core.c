@@ -1068,7 +1068,6 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
 {
     int rc;
     struct device_node *np = dev->of_node;
-    u32 temp_val;
 
     FTS_FUNC_ENTER();
 
@@ -1121,19 +1120,7 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
         FTS_ERROR("Unable to get irq_gpio");
     }
 
-    rc = of_property_read_u32(np, "focaltech,max-touch-number", &temp_val);
-    if (!rc)
-    {
-        pdata->max_touch_number = temp_val;
-        FTS_DEBUG("max_touch_number=%d", pdata->max_touch_number);
-    }
-    else
-    {
-        FTS_ERROR("Unable to get max-touch-number");
-        pdata->max_touch_number = FTS_MAX_POINTS;
-    }
-
-
+    pdata->max_touch_number = FTS_MAX_POINTS;
 
     FTS_FUNC_EXIT();
     return 0;
