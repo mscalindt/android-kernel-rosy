@@ -242,7 +242,9 @@ static bool get_flow_cnt(void)
     return 0;
 }
 
+#if FTS_GESTURE_EN
 extern int panel_dead2tp;
+#endif
 /*****************************************************************************
 *  Name: esdcheck_algorithm
 *  Brief: esd check algorithm
@@ -308,6 +310,7 @@ static int esdcheck_algorithm(void)
     {
         hardware_reset = get_flow_cnt();
     }
+#if FTS_GESTURE_EN
 reg_addr = 0xED;
 fts_i2c_read(fts_i2c_client, &reg_addr, 1, &reg_value, 1);
 if (reg_value == 0xAA)
@@ -315,6 +318,7 @@ if (reg_value == 0xAA)
 	panel_dead2tp = 1;
 	printk("FTS:change panel_dead2tp:%d\n", panel_dead2tp);
 }
+#endif
     /* 8. If need hardware reset, then handle it here */
     if (hardware_reset == 1)
     {

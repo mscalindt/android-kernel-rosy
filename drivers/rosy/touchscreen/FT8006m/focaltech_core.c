@@ -98,8 +98,9 @@ static int ft8006m_ts_resume(struct device *dev);
 #define PINCTRL_STATE_SUSPEND	"pmx_ts_suspend"
 #define PINCTRL_STATE_RELEASE	"pmx_ts_release"
 
+#if FTS_GESTURE_EN
 extern int panel_dead2tp;
-
+#endif
 
 /*****************************************************************************
 *  Name: ft8006m_wait_tp_to_valid
