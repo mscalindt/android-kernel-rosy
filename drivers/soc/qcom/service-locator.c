@@ -274,9 +274,8 @@ static int service_locator_send_msg(struct pd_qmi_client_data *pd)
 		if (db_rev_count != resp->db_rev_count) {
 			pr_err("Service Locator DB updated for client %s\n",
 				pd->client_name);
-			kfree(pd->domain_list);
 			rc = -EAGAIN;
-			goto out;
+			goto out1;
 		}
 		if (resp->domain_list_len >  resp->total_domains) {
 			/* Always read total_domains from the response msg */
@@ -287,6 +286,8 @@ static int service_locator_send_msg(struct pd_qmi_client_data *pd)
 		domains_read += resp->domain_list_len;
 	} while (domains_read < resp->total_domains);
 	rc = 0;
+out1:
+	kfree(pd->domain_list);
 out:
 	kfree(req);
 	kfree(resp);
