@@ -2616,6 +2616,42 @@ static ssize_t temp_state_store(struct device *dev,
 
 static DEVICE_ATTR(temp_state, 0664, temp_state_show, temp_state_store);
 
+static int __init register_device_config(void)
+{
+	int err;
+
+	device_scfg = kzalloc(sizeof(struct device), GFP_KERNEL);
+	if (!device_scfg) {
+		err = -ENOMEM;
+		goto err;
+	}
+
+	dev_set_name(device_scfg, "thermal_message");
+	device_scfg->class = &thermal_class;
+	err = device_register(device_scfg);
+	if (err)
+		goto err_register;
+
+	err = device_create_file(device_scfg, &dev_attr_sconfig);
+	if (err)
+		goto err_sconfig;
+
+	err = device_create_file(device_scfg, &dev_attr_temp_state);
+	if (err)
+		goto err_temp;
+
+	return 0;
+
+err_temp:
+	device_remove_file(device_scfg, &dev_attr_sconfig);
+err_sconfig:
+	device_unregister(device_scfg);
+err_register:
+	kfree(device_scfg);
+err:
+	return err;
+}
+
 static int __init thermal_register_governors(void)
 {
 	int result;
@@ -2652,8 +2688,6 @@ static int __init thermal_init(void)
 {
 	int result;
 
-	device_scfg = kzalloc(sizeof(struct device), GFP_KERNEL);
-
 	result = thermal_register_governors();
 	if (result)
 		goto error;
@@ -2662,25 +2696,15 @@ static int __init thermal_init(void)
 	if (result)
 		goto unregister_governors;
 
-	dev_set_name(device_scfg, "thermal_message");
-	device_scfg->class = &thermal_class;
-	result = device_register(device_scfg);
-	if (result)
-		goto unregister_class;
-
-	result = device_create_file(device_scfg, &dev_attr_sconfig);
-	if (result)
-		goto unregister_class;
-
-	result = device_create_file(device_scfg, &dev_attr_temp_state);
-	if (result)
-		goto unregister_class;
-
 	result = genetlink_init();
 	if (result)
-		goto unregister_device;
+		goto unregister_class;
 
 	result = of_parse_thermal_zones();
+	if (result)
+		goto exit_netlink;
+
+	result = register_device_config();
 	if (result)
 		goto exit_netlink;
 
@@ -2688,9 +2712,6 @@ static int __init thermal_init(void)
 
 exit_netlink:
 	genetlink_exit();
-unregister_device:
-	device_remove_file(device_scfg, &dev_attr_sconfig);
-	device_unregister(device_scfg);
 unregister_class:
 	class_unregister(&thermal_class);
 unregister_governors:
@@ -2701,7 +2722,6 @@ error:
 	mutex_destroy(&thermal_idr_lock);
 	mutex_destroy(&thermal_list_lock);
 	mutex_destroy(&thermal_governor_lock);
-	kfree(device_scfg);
 	return result;
 }
 
