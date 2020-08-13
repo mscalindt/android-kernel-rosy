@@ -217,7 +217,6 @@ struct smbchg_chip {
 	bool				otg_pulse_skip_dis;
 	const char			*battery_type;
 	enum power_supply_type		usb_supply_type;
-	int				Incorrect_type_cnt;
 	bool				very_weak_charger;
 	bool				parallel_charger_detected;
 	bool				chg_otg_enabled;
@@ -942,14 +941,11 @@ static void read_usb_type(struct smbchg_chip *chip, char **usb_type_name,
 {
 	int rc, type;
 	u8 reg;
-	union power_supply_propval prop = {0, };
 
 	if (!is_src_detect_high(chip)) {
 		pr_smb(PR_MISC, "src det low\n");
 		*usb_type_name = "Absent";
 		*usb_supply_type = POWER_SUPPLY_TYPE_UNKNOWN;
-		chip->Incorrect_type_cnt = 0;
-		pr_smb(PR_MISC, "[usb_info] src det low, set usb absent\n");
 		return;
 	}
 
@@ -963,18 +959,6 @@ static void read_usb_type(struct smbchg_chip *chip, char **usb_type_name,
 	type = get_type(reg);
 	*usb_type_name = get_usb_type_name(type);
 	*usb_supply_type = get_usb_supply_type(type);
-
-	if (chip->Incorrect_type_cnt > 1) {
-		rc = chip->usb_psy->get_property(chip->usb_psy,
-						 POWER_SUPPLY_PROP_REAL_TYPE,
-						 &prop);
-		if (!rc && is_usb_present(chip)) {
-			pr_smb(PR_MISC, "[usb_info]Incorrect_type_cnt=%d, force set usb_supply_type=%d for read_usb_type\n",
-				chip->Incorrect_type_cnt, prop.intval);
-			*usb_type_name = "Force_type";
-			*usb_supply_type = prop.intval;
-		}
-	}
 }
 
 #define CHGR_STS			0x0E
@@ -5093,7 +5077,6 @@ static void handle_usb_removal(struct smbchg_chip *chip)
 				chip->usb_present);
 		power_supply_set_present(chip->usb_psy, chip->usb_present);
 	}
-	chip->Incorrect_type_cnt = 0;
 	set_usb_psy_dp_dm(chip, POWER_SUPPLY_DP_DM_DPR_DMR);
 	schedule_work(&chip->usb_set_online_work);
 	pr_smb(PR_MISC, "setting usb psy health UNKNOWN\n");
@@ -6260,10 +6243,6 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 	if (!rc && usb_supply_type == POWER_SUPPLY_TYPE_USB &&
 			prop.intval != POWER_SUPPLY_TYPE_USB &&
 			is_usb_present(chip)) {
-		chip->Incorrect_type_cnt++;
-		pr_smb(PR_MISC,
-			"[usb_info]Incorrect_type_cnt=%d, REAL_TYPE=%d from usb_property, read_type=%d from read_usb_type(USB-4/DCP-5/CDP-6/FLOAT-12)\n",
-			chip->Incorrect_type_cnt, prop.intval, usb_supply_type);
 		/* incorrect type detected */
 		pr_smb(PR_MISC,
 			"Incorrect charger type detetced - rerun APSD\n");
@@ -6277,7 +6256,6 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 		chip->hvdcp_3_det_ignore_uv = false;
 		if (!is_src_detect_high(chip)) {
 			pr_smb(PR_MISC, "Charger removed - force removal\n");
-			chip->Incorrect_type_cnt = 0;
 			update_usb_status(chip, is_usb_present(chip), true);
 			return;
 		}
