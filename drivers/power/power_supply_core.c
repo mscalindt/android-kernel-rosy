@@ -831,6 +831,7 @@ static ssize_t show_StopCharging_Test(struct device *dev,
 				      char *buf)
 {
 	struct power_supply *batt_psy = NULL;
+	const union power_supply_propval val = {0,};
 	bool charging_enable = false;
 	int rc;
 
@@ -838,7 +839,9 @@ static ssize_t show_StopCharging_Test(struct device *dev,
 
 	batt_psy = power_supply_get_by_name("battery");
 	if (batt_psy) {
-		rc = power_supply_set_charging_enabled(batt_psy, 0);
+		rc = power_supply_set_property(batt_psy,
+					POWER_SUPPLY_PROP_CHARGING_ENABLED,
+					&val);
 		if (rc)
 			pr_err("disable charging failed\n");
 		pr_err("show_StopCharging_Test : %x success\n",
@@ -865,6 +868,7 @@ static ssize_t show_StartCharging_Test(struct device *dev,
 				       char *buf)
 {
 	struct power_supply *batt_psy = NULL;
+	const union power_supply_propval val = {1,};
 	bool charging_enable = true;
 	int rc;
 
@@ -872,7 +876,9 @@ static ssize_t show_StartCharging_Test(struct device *dev,
 
 	batt_psy = power_supply_get_by_name("battery");
 	if (batt_psy) {
-		rc = power_supply_set_charging_enabled(batt_psy, 1);
+		rc = power_supply_set_property(batt_psy,
+					POWER_SUPPLY_PROP_CHARGING_ENABLED,
+					&val);
 		if (rc)
 			pr_err("enable charging failed\n");
 		pr_err("show_StartCharging_Test : %x success\n",
