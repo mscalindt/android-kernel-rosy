@@ -8670,8 +8670,8 @@ static void period_update(struct work_struct *work)
 	usb_present	= is_usb_present(chip);
 	usb_current	= smbchg_get_iusb(chip);
 
-	chip->usb_psy->get_property(chip->usb_psy,
-				    POWER_SUPPLY_PROP_VOLTAGE_NOW, &prop);
+	power_supply_get_property(chip->usb_psy,
+				  POWER_SUPPLY_PROP_VOLTAGE_NOW, &prop);
 	vbus = prop.intval;
 	printk_counter++;
 
