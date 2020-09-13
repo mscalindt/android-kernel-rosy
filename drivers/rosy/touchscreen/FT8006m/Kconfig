@@ -1,0 +1,7 @@
+config FT8006M_ROSY
+	bool "FT8006M"
+	depends on TOUCHSCREEN_ROSY
+	help
+	  Say Y here to compile touchscreen drivers for FocalTech FT8006M.
+
+	  If unsure, say Y.
