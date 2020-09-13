@@ -1,0 +1,101 @@
+/*
+ * Copyright (c) 2017, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+#include "sdm450.dtsi"
+#include "msm-pmi8940.dtsi"
+
+/ {
+	model = "Qualcomm Technologies, Inc. SDM450 + PMI8940 QRD";
+	compatible = "qcom,sdm450-qrd", "qcom,sdm450", "qcom,qrd";
+	qcom,board-id = <0x1000b 1>;
+};
+
+/* msm-3.18's msm8953-qrd.dtsi expects pmi8950 props, give it dummy props */
+&spmi_bus {
+	qcom,pmi8950@2 {
+		pmi8950_charger: dummy@0 {
+			dummy = <1>;
+		};
+
+		pmi8950_fg: dummy@0 {
+			dummy = <1>;
+		};
+	};
+};
+
+&soc {
+	led_flash0: qcom,camera-flash@0 {
+		cell-index = <0>;
+		compatible = "qcom,camera-flash";
+		qcom,flash-type = <1>;
+		qcom,flash-source = <&pmi8940_flash0>;
+		qcom,torch-source = <&pmi8940_torch0>;
+		qcom,switch-source = <&pmi8940_switch>;
+	};
+
+	led_flash1: qcom,camera-flash@1 {
+		cell-index = <1>;
+		compatible = "qcom,camera-flash";
+		qcom,flash-type = <1>;
+		qcom,flash-source = <&pmi8940_flash1>;
+		qcom,torch-source = <&pmi8940_torch1>;
+		qcom,switch-source = <&pmi8940_switch>;
+	};
+};
+
+#include "msm8953-qrd-sku3.dtsi"
+
+&spmi_bus {
+	/delete-node/ qcom,pmi8950@2;
+	/delete-node/ qcom,pmi8950@3;
+};
+
+&flash_led {
+	pmi8940_flash1: qcom,flash_1 {
+		label = "flash";
+		qcom,led-name = "led:flash_1";
+		qcom,default-led-trigger = "flash1_trigger";
+		qcom,max-current = <1000>;
+		qcom,duration = <1280>;
+		qcom,id = <1>;
+		qcom,current = <625>;
+	};
+
+	pmi8940_torch1: qcom,torch_1 {
+		label = "torch";
+		qcom,led-name = "led:torch_1";
+		qcom,default-led-trigger = "torch1_trigger";
+		qcom,max-current = <200>;
+		qcom,id = <1>;
+		qcom,current = <120>;
+	};
+};
+
+&led_flash0 {
+	qcom,flash-source = <&pmi8940_flash0>;
+	qcom,torch-source = <&pmi8940_torch0>;
+};
+
+#include "rosy/msm8953-audio_rosy.dtsi"
+#include "rosy/msm8953-camera-sensor-qrd_rosy.dtsi"
+#include "rosy/msm8953-pinctrl_rosy.dtsi"
+#include "rosy/msm8953-pm_rosy.dtsi"
+#include "rosy/msm8953-qrd_rosy.dtsi"
+#include "rosy/msm8953-qrd-sku3_rosy.dtsi"
+#include "rosy/msm8953-regulator_rosy.dtsi"
+#include "rosy/msm8953_rosy.dtsi"
+#include "rosy/msm-audio_rosy.dtsi"
+#include "rosy/msm-pm8953_rosy.dtsi"
+#include "rosy/msm-pmi8940_rosy.dtsi"

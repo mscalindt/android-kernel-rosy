@@ -1,0 +1,9 @@
+&pmi8940_flash0 {
+	qcom,current = <1000>;
+};
+
+&pmi_haptic {
+	/delete-property/ qcom,en-brake;
+	qcom,actuator-type = "erm";
+	qcom,vmax-mv = <2900>;
+};
