@@ -82,6 +82,9 @@
  */
 #define MDP_TIME_PERIOD_CALC_FPS_US	1000000
 
+int panel_dead2tp = 0;
+EXPORT_SYMBOL(panel_dead2tp);
+
 static struct fb_info *fbi_list[MAX_FBI_LIST];
 static int fbi_list_index;
 
@@ -5130,6 +5133,7 @@ void mdss_fb_report_panel_dead(struct msm_fb_data_type *mfd)
 	}
 
 	pdata->panel_info.panel_dead = true;
+	panel_dead2tp = pdata->panel_info.panel_dead;
 	kobject_uevent_env(&mfd->fbi->dev->kobj,
 		KOBJ_CHANGE, envp);
 	pr_err("Panel has gone bad, sending uevent - %s\n", envp[0]);
