@@ -1,0 +1,7 @@
+#
+# Kconfig for ROSY drivers
+#
+
+menu "Drivers for ROSY"
+
+endmenu
