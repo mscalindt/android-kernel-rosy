@@ -341,6 +341,8 @@ module_param_named(batt_valid_ocv, fg_batt_valid_ocv, bool, S_IRUSR | S_IWUSR);
 static int fg_batt_range_pct;
 module_param_named(batt_range_pct, fg_batt_range_pct, int, S_IRUSR | S_IWUSR);
 
+static int area_version_flag;
+
 struct fg_irq {
 	int			irq;
 	bool			disabled;
@@ -843,6 +845,27 @@ static int fg_sec_masked_write(struct fg_chip *chip, u16 addr, u8 mask, u8 val,
 out:
 	spin_unlock_irqrestore(&chip->sec_access_lock, flags);
 	return rc;
+}
+
+static void get_area_version(struct fg_chip *chip)
+{
+	char *boardid_string = NULL;
+	char boardid_start[32] = " ";
+	int India;
+
+	boardid_string = strstr(saved_command_line, "board_id=");
+
+	if (boardid_string != NULL) {
+		strncpy(boardid_start, boardid_string + 9, 9);
+		India = strncmp(boardid_start, "S88567CA1", 9);
+		if (!India) {
+			pr_err("India version!\n");
+			area_version_flag = 1;
+		} else {
+			pr_err("Normal version!\n");
+			area_version_flag = 0;
+		}
+	}
 }
 
 #define RIF_MEM_ACCESS_REQ	BIT(7)
@@ -2257,9 +2280,6 @@ static int get_prop_capacity(struct fg_chip *chip)
 
 	if (chip->battery_missing)
 		return MISSING_CAPACITY;
-
-	if (!chip->profile_loaded && !chip->use_otp_profile)
-		return DEFAULT_CAPACITY;
 
 	if (chip->charge_full)
 		return FULL_CAPACITY;
@@ -6306,6 +6326,41 @@ fail:
 	return -EINVAL;
 }
 
+#define REDO_BATID_DURING_FIRST_EST	BIT(4)
+static void fg_hw_restart(struct fg_chip *chip)
+{
+	u8 data[4];
+	u8 reg, rc;
+	int batt_id;
+
+	reg = 0x80;
+	fg_masked_write(chip, 0x4150, reg, reg, 1);
+	fg_masked_write(chip, chip->soc_base + SOC_RESTART, 0xFF, 0, 1);
+	mdelay(5);
+
+	reg = REDO_BATID_DURING_FIRST_EST | REDO_FIRST_ESTIMATE;
+	fg_masked_write(chip, chip->soc_base + SOC_RESTART, reg, reg, 1);
+	mdelay(5);
+
+	reg = REDO_BATID_DURING_FIRST_EST | REDO_FIRST_ESTIMATE | RESTART_GO;
+	fg_masked_write(chip, chip->soc_base + SOC_RESTART, reg, reg, 1);
+	mdelay(1000);
+
+	fg_masked_write(chip, chip->soc_base + SOC_RESTART, 0xFF, 0, 1);
+	fg_masked_write(chip, 0x4150, 0x80, 0, 1);
+	mdelay(2000);
+
+	rc = fg_mem_read(chip, data, fg_data[FG_DATA_BATT_ID].address,
+			 fg_data[FG_DATA_BATT_ID].len,
+			 fg_data[FG_DATA_BATT_ID].offset, 0);
+	if (rc)
+		pr_err("XJB Failed to get sram battery id data\n");
+	else
+		fg_data[FG_DATA_BATT_ID].value = data[0] * LSB_8B;
+
+	batt_id = get_sram_prop_now(chip, FG_DATA_BATT_ID);
+}
+
 #define FG_PROFILE_LEN			128
 #define PROFILE_COMPARE_LEN		32
 #define THERMAL_COEFF_ADDR		0x444
@@ -6320,6 +6375,7 @@ static int fg_batt_profile_init(struct fg_chip *chip)
 	const char *data, *batt_type_str;
 	bool tried_again = false, vbat_in_range, profiles_same;
 	u8 reg = 0;
+	int value;
 
 wait:
 	fg_stay_awake(&chip->profile_wakeup_source);
@@ -6339,6 +6395,11 @@ wait:
 	/* Check whether the charger is ready */
 	if (!is_charger_available(chip))
 		goto reschedule;
+
+	value = get_sram_prop_now(chip, FG_DATA_BATT_ID);
+	if (!(((value > 57000) && (value < 78000))
+			|| ((value > 280000) && (value < 380000))))
+		fg_hw_restart(chip);
 
 	/* Disable charging for a FG cycle before calculating vbat_in_range */
 	if (!chip->charging_disabled) {
@@ -6401,11 +6462,14 @@ wait:
 			pr_err("Could not read rslow comp thr: %d\n", rc);
 	}
 
-	rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
-					&chip->batt_max_voltage_uv);
-
-	if (rc)
-		pr_warn("couldn't find battery max voltage\n");
+	if (area_version_flag == 1) {
+		chip->batt_max_voltage_uv = 4380000;
+	} else {
+		rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
+						&chip->batt_max_voltage_uv);
+		if (rc)
+			pr_warn("couldn't find battery max voltage\n");
+	}
 
 	/*
 	 * Only configure from profile if fg-cc-cv-threshold-mv is not
@@ -6702,6 +6766,7 @@ static void charge_full_work(struct work_struct *work)
 	int resume_soc_raw = settings[FG_MEM_RESUME_SOC].value;
 	bool disable = false;
 	u8 reg;
+	int msoc = 0, retry = 0;
 
 	if (chip->status != POWER_SUPPLY_STATUS_FULL) {
 		if (fg_debug_mask & FG_STATUS)
@@ -6744,6 +6809,13 @@ static void charge_full_work(struct work_struct *work)
 		pr_info("wrote %06x into soc full\n", bsoc);
 	}
 	fg_mem_release(chip);
+
+	while (msoc != 0xFF && retry != 8) {
+		msleep(200);
+		msoc = get_monotonic_soc_raw(chip);
+		retry++;
+	}
+
 	/*
 	 * wait one cycle to make sure the soc is updated before clearing
 	 * the soc mask bit
@@ -7091,8 +7163,13 @@ static int fg_of_init(struct fg_chip *chip)
 	OF_READ_PROPERTY(chip->evaluation_current,
 			"aging-eval-current-ma", rc,
 			DEFAULT_EVALUATION_CURRENT_MA);
-	OF_READ_PROPERTY(chip->cc_cv_threshold_mv,
-			"fg-cc-cv-threshold-mv", rc, 0);
+
+	if (area_version_flag == 1)
+		chip->cc_cv_threshold_mv = 4370;
+	else
+		OF_READ_PROPERTY(chip->cc_cv_threshold_mv,
+				"fg-cc-cv-threshold-mv", rc, 0);
+
 	if (of_property_read_bool(chip->spmi->dev.of_node,
 				"qcom,capacity-learning-on"))
 		chip->batt_aging_mode = FG_AGING_CC;
@@ -8832,6 +8909,8 @@ static int fg_probe(struct spmi_device *spmi)
 			rc = -EINVAL;
 		}
 	}
+
+	get_area_version(chip);
 
 	rc = fg_detect_pmic_type(chip);
 	if (rc) {
