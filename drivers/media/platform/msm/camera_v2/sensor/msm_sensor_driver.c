@@ -12,6 +12,7 @@
 
 #define SENSOR_DRIVER_I2C "camera"
 /* Header file declaration */
+#include <linux/hardware_info.h>
 #include "msm_sensor.h"
 #include "msm_sd.h"
 #include "camera.h"
@@ -24,11 +25,87 @@
 
 #define SENSOR_MAX_MOUNTANGLE (360)
 
+extern int cam_id_back;
+extern int cam_id_front;
+extern char d1_back_id[];
+extern char d1_front_id[];
+struct kobject kobj_back;
+struct kobject kobj_front;
+ssize_t show_d1_back_id(struct kobject *kobj, struct attribute *attr,
+			char *buf);
+ssize_t show_d1_front_id(struct kobject *kobj, struct attribute *attr,
+			 char *buf);
+
 static struct v4l2_file_operations msm_sensor_v4l2_subdev_fops;
 static int32_t msm_sensor_driver_platform_probe(struct platform_device *pdev);
 
 /* Static declaration */
 static struct msm_sensor_ctrl_t *g_sctrl[MAX_CAMERAS];
+
+static const char *module_info[] = {
+	"Unknown",
+	"Sunny",
+	"Unknown",
+	"Semco",
+	"Unknown",
+	"Unknown",
+	"Qtech",
+	"Ofilm",
+};
+
+struct attribute camera_attr_back = {
+	.name = "id",
+	.mode = S_IRWXUGO,
+};
+
+static struct attribute *def_attrs_back[] = {
+	&camera_attr_back,
+	NULL,
+};
+
+struct sysfs_ops obj_camera_sysops_back = {
+	.show = show_d1_back_id,
+	.store = NULL,
+};
+
+struct kobj_type ktype_back = {
+	.release = NULL,
+	.sysfs_ops = &obj_camera_sysops_back,
+	.default_attrs = def_attrs_back,
+};
+
+struct attribute camera_attr_front = {
+	.name = "id",
+	.mode = S_IRWXUGO,
+};
+
+static struct attribute *def_attrs_front[] = {
+	&camera_attr_front,
+	NULL,
+};
+
+struct sysfs_ops obj_camera_sysops_front = {
+	.show = show_d1_front_id,
+	.store = NULL,
+};
+
+struct kobj_type ktype_front = {
+	.release = NULL,
+	.sysfs_ops = &obj_camera_sysops_front,
+	.default_attrs = def_attrs_front,
+};
+
+ssize_t show_d1_back_id(struct kobject *kobject, struct attribute *attr,
+			char *buf)
+{
+	return sprintf(buf, "%s", d1_back_id);
+}
+
+ssize_t show_d1_front_id(struct kobject *kobject, struct attribute *attr,
+			 char *buf)
+{
+	return sprintf(buf, "%s", d1_front_id);
+}
 
 static int msm_sensor_platform_remove(struct platform_device *pdev)
 {
@@ -810,6 +887,53 @@ int32_t msm_sensor_driver_probe(void *setting,
 		goto free_slave_info;
 	}
 
+	if (!strcmp(slave_info->sensor_name, "ovt_ov12a10_i")) {
+		if (cam_id_back == 7) {
+			rc = kobject_init_and_add(&kobj_back, &ktype_back,
+						  NULL, "rosy_back_cam");
+		} else {
+			pr_info("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
+			rc = -EINVAL;
+			goto free_slave_info;
+		}
+	} else if (!strcmp(slave_info->sensor_name, "sony_imx486_ii")) {
+		if (cam_id_back == 1) {
+			rc = kobject_init_and_add(&kobj_back, &ktype_back,
+						  NULL, "rosy_back_cam");
+		} else {
+			pr_info("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
+			rc = -EINVAL;
+			goto free_slave_info;
+		}
+	} else if (!strcmp(slave_info->sensor_name, "ovt_ov5675_i")) {
+		if (cam_id_front == 6) {
+			rc = kobject_init_and_add(&kobj_front, &ktype_front,
+						  NULL, "rosy_front_cam");
+		} else {
+			pr_info("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
+			rc = -EINVAL;
+			goto free_slave_info;
+		}
+	} else if (!strcmp(slave_info->sensor_name, "ovt_ov5675_ii")) {
+		if (cam_id_front == 7) {
+			rc = kobject_init_and_add(&kobj_front, &ktype_front,
+						  NULL, "rosy_front_cam");
+		} else {
+			pr_info("%s: Failed, sensor is not %s", __func__,
+				slave_info->sensor_name);
+			rc = -EINVAL;
+			goto free_slave_info;
+		}
+	} else {
+		pr_warn("%s: Sensor name is %s, nothing to do", __func__,
+			slave_info->sensor_name);
+		rc = -EINVAL;
+		goto free_slave_info;
+	}
+
 	/* Extract s_ctrl from camera id */
 	s_ctrl = g_sctrl[slave_info->camera_id];
 	if (!s_ctrl) {
@@ -1022,6 +1146,24 @@ CSID_TG:
 	s_ctrl->sensordata->cam_slave_info = slave_info;
 
 	msm_sensor_fill_sensor_info(s_ctrl, probed_info, entity_name);
+
+	hardwareinfo_set_prop(probed_info->position == BACK_CAMERA_B
+			      ? HARDWARE_BACK_CAM : HARDWARE_FRONT_CAM,
+			      probed_info->sensor_name);
+
+	if (cam_id_back > 0)
+		hardwareinfo_set_prop(HARDWARE_BACK_CAM_MOUDULE_ID,
+				      module_info[cam_id_back]);
+	else
+		hardwareinfo_set_prop(HARDWARE_BACK_CAM_MOUDULE_ID,
+				      module_info[0]);
+
+	if (cam_id_front > 0)
+		hardwareinfo_set_prop(HARDWARE_FRONT_CAM_MOUDULE_ID,
+				      module_info[cam_id_front]);
+	else
+		hardwareinfo_set_prop(HARDWARE_FRONT_CAM_MOUDULE_ID,
+				      module_info[0]);
 
 	/*
 	 * Set probe succeeded flag to 1 so that no other camera shall

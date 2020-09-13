@@ -17,6 +17,7 @@
 #include "msm_sd.h"
 #include "msm_cci.h"
 #include "msm_eeprom.h"
+#include "msm_eeprom_otp_interface.h"
 
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
@@ -25,6 +26,13 @@ DEFINE_MSM_MUTEX(msm_eeprom_mutex);
 #ifdef CONFIG_COMPAT
 static struct v4l2_file_operations msm_eeprom_v4l2_subdev_fops;
 #endif
+
+int cam_id_back = -1;
+int cam_id_front = -1;
+char d1_back_id[64];
+char d1_front_id[64];
+char fusion_d1_back[64] = { 0 };
+char fusion_d1_front[64] = { 0 };
 
 /**
   * msm_get_read_mem_size - Get the total size for allocation
@@ -1515,12 +1523,6 @@ static int msm_eeprom_config32(struct msm_eeprom_ctrl_t *e_ctrl,
 		rc = eeprom_config_read_cal_data32(e_ctrl, argp);
 		break;
 	case CFG_EEPROM_INIT:
-		if (e_ctrl->userspace_probe == 0) {
-			pr_err("%s:%d Eeprom already probed at kernel boot",
-				__func__, __LINE__);
-			rc = -EINVAL;
-			break;
-		}
 		if (e_ctrl->cal_data.num_data == 0) {
 			rc = eeprom_init_config32(e_ctrl, argp);
 			if (rc < 0)
@@ -1576,11 +1578,42 @@ static long msm_eeprom_subdev_fops_ioctl32(struct file *file, unsigned int cmd,
 
 #endif
 
+static uint16_t d1_read_back_id(uint8_t *data)
+{
+	uint8_t *fusion_id = data;
+	uint16_t i;
+
+	memset(fusion_d1_back, 0, sizeof(fusion_d1_back));
+	for (i = 0; i < 16; i++) {
+		sprintf(fusion_d1_back + strlen(fusion_d1_back), "%u",
+			fusion_id[i]);
+	}
+
+	CDBG("%s: %s\n", __func__, fusion_d1_back);
+	return 0;
+}
+
+static uint16_t d1_read_front_id(uint8_t *data)
+{
+	uint8_t *fusion_id = data;
+	uint16_t i;
+
+	memset(fusion_d1_front, 0, sizeof(fusion_d1_front));
+	for (i = 0; i < 16; i++) {
+		sprintf(fusion_d1_front + strlen(fusion_d1_front), "%u",
+			fusion_id[i]);
+	}
+
+	CDBG("%s: %s\n", __func__, fusion_d1_front);
+	return 0;
+}
+
 static int msm_eeprom_platform_probe(struct platform_device *pdev)
 {
 	int rc = 0;
 	int j = 0;
 	uint32_t temp;
+	int cam_id = -1;
 
 	struct msm_camera_cci_client *cci_client = NULL;
 	struct msm_eeprom_ctrl_t *e_ctrl = NULL;
@@ -1716,6 +1749,39 @@ static int msm_eeprom_platform_probe(struct platform_device *pdev)
 			pr_err("failed rc %d\n", rc);
 			goto memdata_free;
 		}
+
+		if (!strcmp(eb_info->eeprom_name, "ovt_ov12a10_i")) {
+			cam_id = sensor_eeprom_match_crc_id(e_ctrl, 0x00);
+			if (cam_id != 7) {
+				pr_info("%s: match ovt_ov12a10_i failed\n",
+					__func__);
+				goto power_down;
+			}
+		} else if (!strcmp(eb_info->eeprom_name, "sony_imx486_ii")) {
+			cam_id = sensor_eeprom_match_crc_id(e_ctrl, 0x00);
+			if (cam_id != 1) {
+				pr_info("%s: match sony_imx486_ii failed\n",
+					__func__);
+				goto power_down;
+			}
+		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")) {
+			eeprom_init_ov5675_reg_otp(e_ctrl, 0x20);
+			cam_id = sensor_eeprom_match_crc_id(e_ctrl, 0x7010);
+			if (cam_id != 6) {
+				pr_info("%s: match ovt_ov5675_i failed\n",
+					__func__);
+				goto power_down;
+			}
+		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")) {
+			eeprom_init_ov5675_reg_otp(e_ctrl, 0x6c);
+			cam_id = sensor_eeprom_match_crc_id(e_ctrl, 0x7010);
+			if (cam_id != 7) {
+				pr_info("%s: match ovt_ov5675_ii failed\n",
+					__func__);
+				goto power_down;
+			}
+		}
+
 		rc = read_eeprom_memory(e_ctrl, &e_ctrl->cal_data);
 		if (rc < 0) {
 			pr_err("%s read_eeprom_memory failed\n", __func__);
@@ -1724,6 +1790,67 @@ static int msm_eeprom_platform_probe(struct platform_device *pdev)
 		for (j = 0; j < e_ctrl->cal_data.num_data; j++)
 			CDBG("memory_data[%d] = 0x%X\n", j,
 				e_ctrl->cal_data.mapdata[j]);
+
+		if (!strcmp(eb_info->eeprom_name, "ovt_ov12a10_i")) {
+			if (e_ctrl->cal_data.mapdata[0] == 0x01)
+				cam_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+			else
+				cam_id = -1;
+			if (cam_id == 7) {
+				cam_id_back = cam_id;
+				d1_read_back_id(&e_ctrl->cal_data.mapdata[16]);
+				strcpy(d1_back_id, fusion_d1_back);
+			} else {
+				pr_err("%s: ovt_ov12a10_i failed\n", __func__);
+				goto power_down;
+			}
+		} else if (!strcmp(eb_info->eeprom_name, "sony_imx486_ii")) {
+			if (e_ctrl->cal_data.mapdata[0] == 0x01)
+				cam_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+			else
+				cam_id = -1;
+			if (cam_id == 1) {
+				cam_id_back = cam_id;
+				d1_read_back_id(&e_ctrl->cal_data.mapdata[16]);
+				strcpy(d1_back_id, fusion_d1_back);
+			} else {
+				pr_err("%s: sony_imx486_ii failed\n", __func__);
+				goto power_down;
+			}
+		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_i")) {
+			if (e_ctrl->cal_data.mapdata[0] == 0x01)
+				cam_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+			else if (e_ctrl->cal_data.mapdata[80] == 0x01)
+				cam_id = e_ctrl->cal_data.mapdata[81] & 0x1f;
+			else
+				cam_id = -1;
+			if (cam_id == 6) {
+				cam_id_front = cam_id;
+				d1_read_front_id(&e_ctrl->cal_data.mapdata[16]);
+				strcpy(d1_front_id, fusion_d1_front);
+			} else {
+				pr_err("%s: ovt_ov5675_i failed\n", __func__);
+				goto power_down;
+			}
+		} else if (!strcmp(eb_info->eeprom_name, "ovt_ov5675_ii")) {
+			if (e_ctrl->cal_data.mapdata[0] == 0x01)
+				cam_id = e_ctrl->cal_data.mapdata[1] & 0x1f;
+			else if (e_ctrl->cal_data.mapdata[80] == 0x01)
+				cam_id = e_ctrl->cal_data.mapdata[81] & 0x1f;
+			else
+				cam_id = -1;
+			if (cam_id == 7) {
+				cam_id_front = cam_id;
+				d1_read_front_id(&e_ctrl->cal_data.mapdata[16]);
+				strcpy(d1_front_id, fusion_d1_front);
+			} else {
+				pr_err("%s: ovt_ov5675_ii failed\n", __func__);
+				goto power_down;
+			}
+		} else {
+			pr_warn("%s: rosy eeprom failed\n", __func__);
+			goto power_down;
+		}
 
 		e_ctrl->is_supported |= msm_eeprom_match_crc(&e_ctrl->cal_data);
 

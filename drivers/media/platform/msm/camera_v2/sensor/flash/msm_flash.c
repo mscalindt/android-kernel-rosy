@@ -25,7 +25,6 @@
 DEFINE_MSM_MUTEX(msm_flash_mutex);
 
 static struct v4l2_file_operations msm_flash_v4l2_subdev_fops;
-static struct led_trigger *torch_trigger;
 
 static const struct of_device_id msm_flash_i2c_dt_match[] = {
 	{.compatible = "qcom,camera-flash"},
@@ -72,72 +71,6 @@ static struct msm_camera_i2c_fn_t msm_sensor_cci_func_tbl = {
 		msm_camera_cci_i2c_write_table_w_microdelay,
 	.i2c_util = msm_sensor_cci_i2c_util,
 	.i2c_poll =  msm_camera_cci_i2c_poll,
-};
-
-void msm_torch_brightness_set(struct led_classdev *led_cdev,
-				enum led_brightness value)
-{
-	if (!torch_trigger) {
-		pr_err("No torch trigger found, can't set brightness\n");
-		return;
-	}
-
-	led_trigger_event(torch_trigger, value);
-};
-
-static struct led_classdev msm_torch_led[MAX_LED_TRIGGERS] = {
-	{
-		.name		= "torch-light0",
-		.brightness_set	= msm_torch_brightness_set,
-		.brightness	= LED_OFF,
-	},
-	{
-		.name		= "torch-light1",
-		.brightness_set	= msm_torch_brightness_set,
-		.brightness	= LED_OFF,
-	},
-	{
-		.name		= "torch-light2",
-		.brightness_set	= msm_torch_brightness_set,
-		.brightness	= LED_OFF,
-	},
-};
-
-static int32_t msm_torch_create_classdev(struct platform_device *pdev,
-				void *data)
-{
-	int32_t rc = 0;
-	int32_t i = 0;
-	struct msm_flash_ctrl_t *fctrl =
-		(struct msm_flash_ctrl_t *)data;
-
-	if (!fctrl) {
-		pr_err("Invalid fctrl\n");
-		return -EINVAL;
-	}
-
-	for (i = 0; i < fctrl->torch_num_sources; i++) {
-		if (fctrl->torch_trigger[i]) {
-			torch_trigger = fctrl->torch_trigger[i];
-			CDBG("%s:%d msm_torch_brightness_set for torch %d",
-				__func__, __LINE__, i);
-			msm_torch_brightness_set(&msm_torch_led[i],
-				LED_OFF);
-
-			rc = led_classdev_register(&pdev->dev,
-				&msm_torch_led[i]);
-			if (rc) {
-				pr_err("Failed to register %d led dev. rc = %d\n",
-						i, rc);
-				return rc;
-			}
-		} else {
-			pr_err("Invalid fctrl->torch_trigger[%d]\n", i);
-			return -EINVAL;
-		}
-	}
-
-	return 0;
 };
 
 static int32_t msm_flash_get_subdev_id(
@@ -1270,9 +1203,6 @@ static int32_t msm_flash_platform_probe(struct platform_device *pdev)
 		msm_flash_subdev_fops_ioctl;
 #endif
 	flash_ctrl->msm_sd.sd.devnode->fops = &msm_flash_v4l2_subdev_fops;
-
-	if (flash_ctrl->flash_driver_type == FLASH_DRIVER_PMIC)
-		rc = msm_torch_create_classdev(pdev, flash_ctrl);
 
 	CDBG("probe success\n");
 	return rc;
