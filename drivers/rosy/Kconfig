@@ -22,4 +22,29 @@ config DTS_ROSY
 
 	  If unsure, say Y.
 
+config PSTORE_ROSY
+	bool "PSTORE support"
+	select PSTORE
+	select PSTORE_RAM
+	help
+	  Say Y here to enable persistent storage support. A RAM
+	  buffer will be reserved so that ramoops can be read on
+	  next boot. When a panic happens, you will be able to
+	  read dmesg at /sys/fs/pstore/dmesg-ramoops-X
+
+if PSTORE_ROSY
+
+config LAST_KMSG_ROSY
+	bool "Last kernel messages interface"
+	select PSTORE_CONSOLE
+	help
+	  Say Y here to enable proc interface used for storing the
+	  last kernel messages (kernel messages will always be
+	  logged, irrespective of kernel condition). The interface
+	  is located at /proc/last_kmsg
+
+	  If unsure, say Y.
+
+endif
+
 endmenu
