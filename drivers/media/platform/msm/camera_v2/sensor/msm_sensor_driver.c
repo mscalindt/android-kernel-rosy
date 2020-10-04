@@ -1040,7 +1040,7 @@ CSID_TG:
 		goto free_camera_info;
 	}
 
-	pr_err("%s probe succeeded", slave_info->sensor_name);
+	pr_info("%s probe succeeded", slave_info->sensor_name);
 
 	/*
 	 * Update the subdevice id of flash-src based on availability in kernel.
